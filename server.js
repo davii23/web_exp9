@@ -1,61 +1,58 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const User = require('./models/User');
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const User = require("./models/User");
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-// MongoDB connection
-mongoose.connect('mongodb://127.0.0.1:27017/ngoApp', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(()=> console.log("MongoDB connected"))
-  .catch(err => console.log(err));
+// Connect MongoDB
+mongoose.connect("mongodb://127.0.0.1:27017/ngoDB")
+.then(() => console.log("✅ MongoDB connected"))
+.catch(err => console.log("MongoDB connection error:", err));
 
-// Registration
-app.post('/register', async (req, res) => {
-  const { fullName, email, username, password, confirmPassword } = req.body;
-  if(password !== confirmPassword) return res.status(400).json({message: "Passwords do not match"});
+// Test route
+app.get("/", (req, res) => res.send("NGO Backend Running"));
 
-  const passwordRegex = /^(?=.*[0-9]).{6,}$/; // min 6 chars, at least 1 number
-  if(!passwordRegex.test(password)) return res.status(400).json({message: "Password must be at least 6 characters and include a number"});
-
-  try {
-    const existingUser = await User.findOne({ $or: [{email}, {username}] });
-    if(existingUser) return res.status(400).json({message: "Username or email already exists"});
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({
-      full_name: fullName,
-      email,
-      username,
-      password: hashedPassword
-    });
-    await newUser.save();
-    res.json({message: "Registration successful"});
-  } catch(err) {
-    res.status(500).json({message: "Server error"});
-  }
+// Register route
+app.post("/api/register", async (req, res) => {
+    try {
+        const { fullName, email, username, password } = req.body;
+        const user = new User({ fullName, email, username, password });
+        await user.save();
+        res.json({ message: "Registration successful" });
+    } catch (err) {
+        if(err.code === 11000) {
+            res.status(400).json({ message: "Email or Username already exists" });
+        } else {
+            res.status(500).json({ message: err.message });
+        }
+    }
 });
 
-// Login
-app.post('/login', async (req, res) => {
-  const { usernameOrEmail, password } = req.body;
-  try {
-    const user = await User.findOne({ $or: [{username: usernameOrEmail}, {email: usernameOrEmail}] });
-    if(!user) return res.status(400).json({message: "User not found"});
+// Login route
+app.post("/api/login", async (req, res) => {
+    const { usernameOrEmail, password } = req.body;
+    try {
+        const user = await User.findOne({
+            $or: [{ email: usernameOrEmail }, { username: usernameOrEmail }]
+        });
 
-    const match = await bcrypt.compare(password, user.password);
-    if(!match) return res.status(400).json({message: "Invalid credentials"});
+        if(!user) return res.status(400).json({ message: "User not found" });
+        if(password !== user.password) return res.status(400).json({ message: "Invalid password" });
 
-    res.json({message: "Login successful"});
-  } catch(err) {
-    res.status(500).json({message: "Server error"});
-  }
+        res.json({ message: "Login successful" });
+    } catch(err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
-app.listen(5000, () => console.log("Server running on http://localhost:5000"));
+// View all users (optional)
+app.get("/api/viewAll", async (req, res) => {
+    const users = await User.find();
+    res.json(users);
+});
+
+const PORT = 7000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
