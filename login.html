@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <form id="loginForm">
+    <h2>Login</h2>
+    <input type="text" name="usernameOrEmail" placeholder="Username or Email" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+    <p>Don't have an account? <a href="register.html">Register</a></p>
+  </form>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const data = {
+        usernameOrEmail: form.usernameOrEmail.value,
+        password: form.password.value
+      };
+      const res = await fetch('http://localhost:5000/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+      alert(result.message);
+      if(res.ok) window.location.href = "dashboard.html";
+    });
+  </script>
+</body>
+</html>
