@@ -21,7 +21,7 @@
         usernameOrEmail: form.usernameOrEmail.value,
         password: form.password.value
       };
-      const res = await fetch('http://localhost:5000/login', {
+      const res = await fetch('http://localhost:7000/api/login', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
