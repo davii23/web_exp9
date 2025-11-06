@@ -20,14 +20,17 @@
     const form = document.getElementById('registerForm');
     form.addEventListener('submit', async e => {
       e.preventDefault();
+      if(form.password.value !== form.confirmPassword.value){
+        alert("Passwords do not match!");
+        return;
+      }
       const data = {
         fullName: form.fullName.value,
         email: form.email.value,
         username: form.username.value,
-        password: form.password.value,
-        confirmPassword: form.confirmPassword.value
+        password: form.password.value
       };
-      const res = await fetch('http://localhost:5000/register', {
+      const res = await fetch('http://localhost:7000/api/register', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
